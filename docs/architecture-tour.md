@@ -5,10 +5,7 @@ _How six modular skills take a Rust product from concrete user pain to a verifie
 > `KJ-AIML/rust-product-skills` is a brand-neutral kit of six `agentskills.io` skills for coding agents. Every anti-goal becomes a tested engine rule (`R1..Rn`), and every architectural boundary is checked mechanically by `cargo run -p xtask -- verify`.
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/runtime-3d-dark.gif">
-    <img src="assets/runtime-3d-light.gif" width="820" alt="3D isometric walkthrough of one command flowing through Modern UI, App Shell, L4 Engine, L2 Domain, L3 Store, and L5 Port, including failure isolation and xtask verify">
-  </picture>
+  <img src="assets/runtime-3d-light.gif" width="820" alt="3D isometric walkthrough of one command flowing through Modern UI, App Shell, L4 Engine, L2 Domain, L3 Store, and L5 Port, including failure isolation and xtask verify">
   <br>
   <sub>Animated 3D runtime flow: one command crosses six isolated components, including <code>tx 1 → L5 Port → tx 2</code> and failure isolation.</sub>
 </p>

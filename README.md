@@ -44,10 +44,7 @@ scaffold a strict <code>L0</code>–<code>L5</code> Rust Edition 2024 workspace,
 </table>
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/runtime-3d-dark.gif">
-    <img src="docs/assets/runtime-3d-light.gif" width="820" alt="Animated 3D isometric walkthrough of one command flowing through Modern UI, App Shell, L4 Engine, L2 Domain, L3 Store, and L5 Port, including timeout isolation and xtask verification">
-  </picture>
+  <img src="docs/assets/runtime-3d-light.gif" width="820" alt="Animated 3D isometric walkthrough of one command flowing through Modern UI, App Shell, L4 Engine, L2 Domain, L3 Store, and L5 Port, including timeout isolation and xtask verification">
   <br>
   <sub>One command traveling across six isolated <code>L0</code>–<code>L5</code> boundaries: <code>ts-rs</code> bridge, pure <code>R1..Rn</code> checks, short <code>tx 1 → L5 Port → tx 2</code>, and failure isolation. <a href="docs/architecture-tour.md">Full architecture tour</a>.</sub>
 </p>
