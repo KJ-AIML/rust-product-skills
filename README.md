@@ -162,6 +162,17 @@ Each skill follows the open [agentskills.io](https://agentskills.io) specificati
 | `L5` | `integrations` | `L0`, `L4` (ports) | External HTTP (`reqwest`), subprocesses, OS/system calls with explicit timeouts and byte caps |
 | `App` | `apps/*` | `L0`–`L5` | Thin delivery shells: Axum / MCP server, background worker, Tauri v2 desktop, or Clap CLI |
 
+### Workspace layout
+
+Every product scaffolded with [`rust-architecture-baseline`](skills/rust-architecture-baseline/SKILL.md) follows this exact structure so agents and humans always know where each boundary lives:
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/workspace-tree-dark.png">
+    <img src="docs/assets/workspace-tree-light.png" width="780" alt="Annotated Rust product workspace tree showing apps, crates L0 through L5, web frontend with generated ts-rs bindings, xtask verify, docs, CI, and Edition 2024 root configs">
+  </picture>
+</p>
+
 ### Inside `Engine::execute`
 
 Every state-changing action crosses one fixed pipeline so commands never bypass policy checks, never write ad-hoc audit rows, never panic across the boundary, and never hold a database transaction open across external network or OS calls:

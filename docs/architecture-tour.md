@@ -94,6 +94,15 @@ flowchart LR
 4. Exports `ts-rs` bindings and verifies frontend TypeScript types match Rust with zero drift.
 5. Runs `clippy --all-targets -- -D warnings` (`unsafe` forbidden; `unwrap`/`expect`/`panic`/`as` denied) and the full test suite.
 
+### Generated Workspace Layout
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/workspace-tree-dark.png">
+    <img src="assets/workspace-tree-light.png" width="780" alt="Annotated Rust product workspace tree showing apps, crates L0 through L5, web frontend, xtask verify, docs, CI, and root configs">
+  </picture>
+</p>
+
 ## 4. Inside `Engine::execute` (Pipeline & Safety Boundaries)
 
 Every state-changing action crosses one fixed pipeline. Unauthorized calls, panics, and live external I/O stay isolated without corrupting state or holding an open database transaction.
