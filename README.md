@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/logo.png" width="160" height="160" alt="rust-product-skills layered isometric emblem">
+  <img src="docs/assets/logo.png" width="260" height="260" alt="rust-product-skills — Build, Ship, Automate, Scale">
 </p>
 
 <h1 align="center">rust-product-skills</h1>
