@@ -138,15 +138,15 @@ Each skill follows the open [agentskills.io](https://agentskills.io) specificati
 
 ## Layered architecture
 
-`rust-architecture-baseline` enforces a strict one-way dependency DAG so business logic stays deterministic, fast to test, and impossible to tangle with HTTP handlers, SQL drivers, or OS subprocesses.
+[`rust-architecture-baseline`](skills/rust-architecture-baseline/SKILL.md) enforces a strict one-way dependency DAG so business logic stays deterministic, tests in milliseconds with zero mocks, and can never tangle with HTTP handlers, SQL drivers, or OS subprocesses.
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-dark.svg">
-    <img src="docs/assets/architecture-light.svg" width="840" alt="Layered Rust L0 through L5 workspace architecture enforced by cargo xtask verify">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-blueprint-dark.png">
+    <img src="docs/assets/architecture-blueprint-light.png" width="860" alt="Layered Rust L0 through L5 workspace architecture blueprint showing Delivery Surfaces, inverted L5 Integrations port, L4 Engine, L3 Store, zero-I/O Pure Core, ts-rs codegen, and the 5-stage cargo xtask verify gate">
   </picture>
   <br>
-  <sub>One <code>L0</code>–<code>L5</code> core with inverted <code>L5</code> port traits powers both Backend Services (Axum / MCP) and Desktop / CLI apps (Tauri v2).</sub>
+  <sub>Strict <code>L0</code>–<code>L5</code> workspace DAG with inverted <code>L5</code> port traits, <code>ts-rs</code> codegen, and the 5-gate <code>cargo run -p xtask -- verify</code> harness.</sub>
 </p>
 
 | Layer | Crate | Depends on | Enforced invariant |
