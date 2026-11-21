@@ -25,9 +25,32 @@ Built in the open [agentskills.io](https://agentskills.io) `SKILL.md` format so 
 
 ## Install
 
-Clone the repository, then link `skills/*` into your agent's skill directory so updates arrive with `git pull`.
+### Recommended (`npx skills add`)
 
-### Windows (PowerShell)
+Install all 6 skills directly from GitHub via the [skills CLI](https://skills.sh/) (works with Antigravity, Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, and more):
+
+```bash
+# Install into the current project
+npx skills add KJ-AIML/rust-product-skills
+
+# Install globally for your user
+npx skills add KJ-AIML/rust-product-skills -g
+
+# Install all skills to all detected agents non-interactively
+npx skills add KJ-AIML/rust-product-skills --all
+
+# Preview available skills without installing
+npx skills add KJ-AIML/rust-product-skills --list
+
+# Install specific skills only
+npx skills add KJ-AIML/rust-product-skills --skill rust-architecture-baseline modern-ui-design
+```
+
+### Manual Clone & Link Scripts
+
+If you prefer a local git clone so updates arrive with `git pull`:
+
+#### Windows (PowerShell)
 
 ```powershell
 # Antigravity / Gemini CLI global skills (~/.gemini/config/skills)
@@ -43,14 +66,14 @@ Clone the repository, then link `skills/*` into your agent's skill directory so 
 .\scripts\install.ps1 -Target workspace -WorkspacePath D:\path\to\your-project
 ```
 
-### macOS / Linux
+#### macOS / Linux
 
 ```bash
 # Default: ~/.agents/skills (or pass --target antigravity | claude | agents | workspace)
 ./scripts/install.sh --target agents
 ```
 
-### Manual Paths
+#### Manual Paths
 
 | Tool | Target Directory |
 | :--- | :--- |
