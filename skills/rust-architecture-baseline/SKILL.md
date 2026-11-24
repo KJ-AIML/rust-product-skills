@@ -1,9 +1,10 @@
 ---
 name: rust-architecture-baseline
 description: >-
-  Use when designing, scaffolding, planning, or coding any Rust product backend, CLI, or Tauri v2
-  desktop app: defines the layered L0-L5 Cargo workspace, strict deny lints, Engine::execute
-  command pipeline, xtask verification gates, and Backend Service vs. Desktop-CLI profiles.
+  Use when designing, scaffolding, planning, or coding any Rust product backend, CLI, Tauri v2,
+  or native GPUI desktop app: defines the layered L0-L5 Cargo workspace, strict deny lints,
+  Engine::execute command pipeline, xtask verification gates, and Backend Service, Tauri v2
+  Desktop-CLI, and Native GPUI Desktop profiles.
 ---
 
 # Rust Architecture Baseline
@@ -23,20 +24,20 @@ Break a baseline rule only with an explicit ADR documenting what the rule protec
 | API / Dispatch | Single `CommandRegistry` + `Engine::execute` running in a fixed pipeline (policy check → panic boundary → handler → store/audit) |
 | Persistence | Profile-dependent, isolated solely in `L3 store`: **Postgres + forced RLS** (multi-tenant services) OR **SQLite / atomic JSON** (single-user desktop/local tools) |
 | External I/O | Isolated solely in `L5 integrations` implementing `L4 engine` port traits (`reqwest`, subprocesses, OS APIs) |
-| UI Contract | React + Vite + Tailwind v4 consuming TypeScript bindings generated directly from `L0`/`L1` via `ts-rs` |
+| UI Contract | **Profiles A/B:** React + Vite + Tailwind v4 consuming `ts-rs` bindings from `L0`/`L1` · **Profile C:** Native GPUI (`apps/<prefix>-desktop`) consuming `L0`/`L1` Rust types directly at compile time |
 | Quality Gates | Workspace lints deny `unwrap`, `expect`, `panic`, `todo`, `unimplemented`, `unreachable`, `dbg`, `as`; forbid `unsafe`. Enforced by `cargo run -p xtask -- verify`. |
 
 ## Layered Crate Rules (The DAG)
 
 | Layer | Crate Role | Allowed Internal Deps | Strictly Forbidden |
 | :--- | :--- | :--- | :--- |
-| **L0** | `<prefix>-primitives` | None | Any async runtime, `std::fs`, `std::process`, `std::net`, `sqlx`, `reqwest`, `tauri` |
-| **L1** | `<prefix>-spec` | L0 | Same as L0 (pure contracts, DTOs, `CommandId`, `AccessPolicy`, `ts-rs` exports) |
+| **L0** | `<prefix>-primitives` | None | Any async runtime, `std::fs`, `std::process`, `std::net`, `sqlx`, `reqwest`, `tauri`, `gpui`, `tray-icon` |
+| **L1** | `<prefix>-spec` | L0 | Same as L0 (pure contracts, DTOs, `CommandId`, `AccessPolicy`, optional `ts-rs` exports) |
 | **L2** | `<prefix>-domain` | L0, L1 | Same as L0 (pure parsers, validators, state transitions, policy checks) |
-| **L3** | `<prefix>-store` | L0, L1, L2 | `L4`, `L5`, `reqwest`, `std::process`, `tauri` (persistence only) |
-| **L4** | `<prefix>-engine` | L0, L1, L2, L3 | `L5`, `reqwest`, `std::fs`, `std::process`, `tauri` (defines port traits; never imports adapters) |
-| **L5** | `<prefix>-integrations` | L0, L4 | `L3`, `tauri` (implements L4 port traits using HTTP, OS APIs, or subprocesses) |
-| **App** | `apps/server`, `apps/cli`, `desktop/src-tauri` | L0–L5 | Putting business logic or raw SQL directly in route/IPC handlers |
+| **L3** | `<prefix>-store` | L0, L1, L2 | `L4`, `L5`, `reqwest`, `std::process`, `tauri`, `gpui`, `tray-icon` (persistence only) |
+| **L4** | `<prefix>-engine` | L0, L1, L2, L3 | `L5`, `reqwest`, `std::fs`, `std::process`, `tauri`, `gpui`, `tray-icon` (defines port traits; never imports adapters) |
+| **L5** | `<prefix>-integrations` | L0, L4 | `L3`, `tauri`, `gpui`, `tray-icon` (implements L4 port traits using HTTP, OS APIs, or subprocesses) |
+| **App** | `apps/server`, `apps/cli`, `apps/<prefix>-desktop`, `desktop/src-tauri` | L0–L5 | Putting business logic or raw SQL directly in route/IPC/UI handlers |
 
 ## Core Baseline Invariants
 
@@ -57,6 +58,7 @@ Read the reference guide matching your product before scaffolding:
 - **Workspace & `xtask verify` setup (required for all projects):** [references/workspace-scaffold.md](./references/workspace-scaffold.md)
 - **Profile A — Multi-tenant / API Backend Service (Axum + MCP + Postgres RLS / SQLite):** [references/backend-service-profile.md](./references/backend-service-profile.md)
 - **Profile B — Local Desktop & CLI App (Tauri v2 + Atomic Local Store / SQLite + Tray):** [references/desktop-cli-profile.md](./references/desktop-cli-profile.md)
+- **Profile C — Native GPUI Desktop & CLI App (GPUI + Menu Bar / Tray + Atomic Local Store):** [references/gpui-desktop-profile.md](./references/gpui-desktop-profile.md)
 
 ## Breaking a Baseline Rule (ADR Pattern)
 

@@ -35,8 +35,8 @@ Follow the dependency DAG bottom-up so every task compiles and passes tests imme
 5. **`L3 store`:** Persistence trait + concrete adapter (`Postgres`/`SQLite`/`JsonFileStore`) + `MemoryStore` + round-trip tests (plus `rls` gate for multi-tenant Postgres).
 6. **`L4 engine`:** Port traits, `CommandRegistry`, `Engine::execute` (`CatchUnwind` + centralized audit log), and scripted mock-rig tests covering happy paths, retries, panics, and every anti-goal rule.
 7. **`L5 integrations`:** Concrete external adapters (HTTP/SOCKS, subprocesses, OS APIs) with timeouts and output size caps.
-8. **App Shell(s):** Thin HTTP/MCP server, CLI binary, and/or Tauri v2 desktop app wiring L0–L5.
-9. **Frontend UI (if applicable):** React + Vite + Tailwind v4 consuming `src/generated/` (`ts-rs`) + browser preview bridge + visual verification.
+8. **App Shell(s):** Thin HTTP/MCP server, CLI binary, Tauri v2 desktop app, or Native GPUI desktop + tray app wiring L0–L5.
+9. **Frontend / Native UI (if applicable):** React + Vite + Tailwind v4 consuming `src/generated/` (`ts-rs`) + browser preview bridge, **or** Native GPUI views using `gpui-tokens.md` + `L0`/`L1` Rust types directly.
 10. **CI & Release Verification:** End-to-end smoke check, release bundle check, and final `cargo run -p xtask -- verify`.
 
 ## Common Cross-Platform & Rust 2024 Gotchas
@@ -46,8 +46,12 @@ Follow the dependency DAG bottom-up so every task compiles and passes tests imme
 | `expected identifier, found reserved keyword 'gen'` | `gen` is a reserved keyword in Rust Edition 2024. Use `epoch`, `generation`, or `rev`. |
 | `clippy::collapsible-if` fails under `-D warnings` | Edition 2024 enables `let`-chains. Collapse nested `if` + `if let` blocks cleanly. |
 | `clippy::unreachable` on `#[tauri::command]` | Isolate thin Tauri IPC wrappers inside `mod ipc { #![allow(clippy::unreachable)] ... }`. |
-| Console window flashes on Windows GUI app | Set `.creation_flags(0x0800_0000)` (`CREATE_NO_WINDOW`) on `tokio::process::Command` under `#[cfg(windows)]`. |
+| `gpui` macOS build fails: `cannot execute tool 'metal' due to missing Metal Toolchain` | Newer Xcode splits offline `metal` into an optional component. Enable `gpui = { version = "...", features = ["runtime_shaders"] }` so Metal compiles shaders at runtime on macOS (no-op on Windows). |
+| `tray-icon` panics on macOS startup or triggers `deprecated` warning | Create `TrayIconBuilder` strictly on the main thread inside `Application::new().run(...)`, and use `.with_icon_templated(icon)` on macOS instead of deprecated `.with_icon_as_template(true)`. |
+| `sysinfo` 0.40+ `System::new()` type mismatch | `sysinfo 0.40+` returns `Result<System, sysinfo::Error>` from `System::new()`; propagate with `?` / `map_err` instead of treating it as infallible. |
+| `clippy::as_conversions` on GPUI `px(...)` / `relative(...)` widths | Never cast `f64 as f32`; scale percentages via integer steps (`u16` → `f32::from(...)`) and use `.into_any_element()` on heterogeneous `Div` / `Stateful<Div>` branches. |
+| Console window flashes on Windows GUI app | Set `#![cfg_attr(target_os = "windows", windows_subsystem = "windows")]` on the GUI binary and `.creation_flags(0x0800_0000)` (`CREATE_NO_WINDOW`) on background helper `Command`s under `#[cfg(windows)]`. |
 | `dlltool` / `getrandom` or `aws-lc-rs` / `nasm` link error on Windows | Use `x86_64-pc-windows-msvc` target and prefer `reqwest` `native-tls` (Schannel) on Windows when C/ASM toolchains aren't guaranteed. |
-| `xtask` gate passes on Linux, fails on Windows | Normalize all paths with `.replace('\\', "/")` inside `xtask`. |
+| `xtask` gate passes on Linux/macOS, fails on Windows | Normalize all paths with `.replace('\\', "/")` inside `xtask`. |
 | Shell/SQL scripts break after Git checkout | Enforce `*.sh`, `*.sql`, `*.rs`, `*.toml` as `text eol=lf` in `.gitattributes`. |
 | `ts-rs` exports `u64`/`i64` as `bigint` in TS | Annotate JSON-number fields with `#[ts(type = "number")]` and patch fields with `#[ts(optional)]`. |

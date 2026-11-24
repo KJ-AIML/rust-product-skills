@@ -1,7 +1,7 @@
 # Implementation Plan: <Product Name> (Phase 1–2)
 
 - **Design Doc:** `docs/decisions/ADR-001-<product>-design.md`
-- **Profile:** Backend Service | Desktop & CLI
+- **Profile:** Backend Service | Desktop & CLI (Tauri v2) | Native GPUI Desktop & CLI
 
 ## Global Constraints
 - Rust Edition 2024, toolchain pinned in `rust-toolchain.toml`
@@ -51,7 +51,7 @@
 - **Produces:** Concrete OS/HTTP adapters and thin transport/IPC wiring
 - **Verify:** `cargo run -p xtask -- verify`
 
-### Task 6: Frontend UI & End-to-End Verification (if applicable)
-- **Files:** `desktop-tauri/src/` (or `web/src/`)
-- **Produces:** React + Vite + Tailwind v4 UI, browser preview bridge, visual inspection
-- **Verify:** `npm run typecheck && npm run build` + browser inspection
+### Task 6: Frontend or Native GPUI UI & End-to-End Verification (if applicable)
+- **Files:** `desktop-tauri/src/` (or `web/src/`) **or** `apps/<prefix>-desktop/src/` (GPUI)
+- **Produces:** React + Vite + Tailwind v4 UI + preview bridge, **or** Native GPUI views + Menu Bar / Tray controller
+- **Verify:** `npm run typecheck && npm run build` + browser inspection **or** `cargo run -p xtask -- verify` + `cargo build -p <prefix>-desktop` + CLI smoke run

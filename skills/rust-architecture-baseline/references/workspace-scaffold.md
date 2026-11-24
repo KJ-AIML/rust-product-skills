@@ -91,9 +91,9 @@ impl<F: Future + Unpin> Future for CatchUnwindFut<F> {
 
 Include an `xtask/` binary crate depending on `cargo_metadata` that runs five gates in order:
 
-1. **`layers`** — Parses `cargo metadata` and asserts each crate's direct workspace and external dependencies obey the `L0`–`L5` table.
-2. **`purity`** — Walks `.rs` files in `L0`–`L4` and rejects forbidden tokens (`std::fs`, `std::process`, `std::net`, `tokio::`, `reqwest::`, `sqlx::`, `tauri::`) outside their permitted layers. Normalize path separators (`\` → `/`) so checks behave identically on Windows and Linux.
-3. **`codegen`** — Runs `ts-rs` export tests on `L0`/`L1` with `TS_RS_EXPORT_DIR` pointing at `<frontend>/src/generated` and generates a deterministic `index.ts` barrel.
+1. **`layers`** — Parses `cargo metadata` and asserts each crate's direct workspace and external dependencies obey the `L0`–`L5` table (including forbidding `gpui` / `tray-icon` in `L0`–`L5` for Profile C).
+2. **`purity`** — Walks `.rs` files in `L0`–`L5` and rejects forbidden tokens (`std::fs`, `std::process`, `std::net`, `tokio::`, `reqwest::`, `sqlx::`, `tauri::`, `gpui::`, `tray_icon::`) outside their permitted layers. Normalize path separators (`\` → `/`) so checks behave identically on Windows, macOS, and Linux.
+3. **`codegen`** *(Profiles A/B with TypeScript UI)* — Runs `ts-rs` export tests on `L0`/`L1` with `TS_RS_EXPORT_DIR` pointing at `<frontend>/src/generated` and generates a deterministic `index.ts` barrel. Omit this gate in **Profile C (Native GPUI)**, where the UI consumes `L0`/`L1` Rust types directly at compile time.
    - Tip: annotate `u64`/`i64` fields with `#[ts(type = "number")]` when JSON transports them as JS numbers, and mark partial patch fields with `#[ts(optional)]`.
 4. **`lints`** — Runs `cargo clippy --workspace --all-targets -- -D warnings`.
 5. **`tests`** — Runs `cargo test --workspace` (and for Postgres profiles, an `rls` gate verifying tenant policies on every migration).

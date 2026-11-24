@@ -2,7 +2,7 @@
 
 - **Status:** Draft | Accepted
 - **Date:** YYYY-MM-DD
-- **Runtime Profile:** `[call]` Backend Service (Axum + Postgres/SQLite) | Desktop & CLI (Tauri v2 + Local Store)
+- **Runtime Profile:** `[call]` Backend Service (Axum + Postgres/SQLite) | Desktop & CLI (Tauri v2 + Local Store) | Native GPUI Desktop & CLI (GPUI + Tray + Local Store)
 
 ## 1. Intent
 
@@ -45,13 +45,13 @@ Follows `rust-architecture-baseline`:
 
 ```text
 L0  crates/<prefix>-primitives    Pure value types & enums
-L1  crates/<prefix>-spec          CommandId, AccessPolicy, DTOs, ts-rs bindings
+L1  crates/<prefix>-spec          CommandId, AccessPolicy, DTOs, optional ts-rs bindings
 L2  crates/<prefix>-domain        Pure parsers, validators, state transitions, policy checks
 L3  crates/<prefix>-store         Persistence boundary only (Postgres/SQLite/atomic JSON)
 L4  crates/<prefix>-engine        Port traits, CommandRegistry, Engine::execute, audit trail
 L5  crates/<prefix>-integrations  External HTTP, subprocesses, OS APIs
-App apps/...                      HTTP/MCP server, CLI binary, and/or Tauri v2 desktop app
-QA  xtask/                        Automated gates: layers, purity, codegen, lints, tests
+App apps/...                      HTTP/MCP server, CLI binary, Tauri v2, and/or native GPUI desktop app
+QA  xtask/                        Automated gates: layers, purity, codegen (if TS UI), lints, tests
 ```
 
 ### Baseline Deviations (if any)

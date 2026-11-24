@@ -19,7 +19,7 @@ Coding agents move fast, which makes architectural drift happen fast too: they s
 - **Problem before crates.** Discovery locks down concrete friction, lean v1 scope (`F1..F8`), and trust-breaking anti-goals before touching `Cargo.toml`.
 - **Rules in the engine, not the UI.** Every anti-goal maps to a testable domain/engine check (`R1..Rn`) enforced inside `Engine::execute`, never just a disabled button.
 - **Mechanical gates over tribal memory.** `cargo run -p xtask -- verify` checks layer DAGs, `L0`–`L2` purity, `ts-rs` TypeScript sync, strict deny lints, and tests on every change.
-- **One core, two app shapes.** The same `L0`–`L5` workspace powers multi-tenant Backend Services (Axum / MCP + Postgres RLS) and local Desktop / CLI apps (Tauri v2 + atomic store).
+- **One core, three app shapes.** The same `L0`–`L5` workspace powers multi-tenant Backend Services (Axum / MCP + Postgres RLS), Tauri v2 Desktop / CLI apps, and Native GPUI Desktop + Menu Bar / Tray apps.
 
 ## 2. The 5-Stage Lifecycle & Approval Gates
 
@@ -31,7 +31,7 @@ Orchestrated by [`starting-a-rust-product`](../skills/starting-a-rust-product/SK
 | 2 | [`writing-rust-design-docs`](../skills/writing-rust-design-docs/SKILL.md) | `ADR-001` (`[user]` vs `[call]`, `R1..Rn`) | User approves ADR & rules | Record `ADR-001` + `[call]` log |
 | 3 | [`planning-rust-builds`](../skills/planning-rust-builds/SKILL.md) | Phase 1–2 bottom-up DAG plan | User approves build plan | Sequence Phase 1–2 inline |
 | 4 | [`rust-architecture-baseline`](../skills/rust-architecture-baseline/SKILL.md) | `L0`–`L5` crates + `xtask verify` + first slice | `cargo run -p xtask -- verify` passes | `cargo run -p xtask -- verify` passes |
-| 5 | [`modern-ui-design`](../skills/modern-ui-design/SKILL.md) | React + Tailwind v4 UI + `ts-rs` + Preview Mode | `tsc`, `vite build`, visual check pass | `tsc`, `vite build`, visual check pass |
+| 5 | [`modern-ui-design`](../skills/modern-ui-design/SKILL.md) | React + Tailwind v4 (`ts-rs`) **or** Native GPUI (`gpui-tokens.md`) | Build / typecheck & visual check pass | Build / typecheck & visual check pass |
 
 > [!TIP]
 > Human gates protect product scope in Stages 1–3; mechanical gates (`xtask verify`, `tsc`, visual checks) protect code quality in Stages 4–5 — even in autonomous mode.
@@ -43,8 +43,8 @@ Dependencies and calls flow strictly left to right from delivery shells into orc
 ```mermaid
 flowchart LR
   subgraph sg0["Delivery Surfaces"]
-    n0["Modern UI (React + ts-rs)"]
-    n1["App Shell (Axum / Tauri / CLI)"]
+    n0["Modern UI (React + ts-rs or Native GPUI)"]
+    n1["App Shell (Axum / Tauri / GPUI / CLI)"]
   end
   subgraph sg1["Quality Gate"]
     n2["xtask verify"]
@@ -129,17 +129,17 @@ sequenceDiagram
   end
 ```
 
-## 5. Backend Service vs. Desktop & CLI Profiles
+## 5. Three Runtime Profiles (Service · Tauri v2 · Native GPUI)
 
-Both profiles share the exact same `L0`–`L5` crate rules and `xtask verify` harness; only the outer persistence, isolation, and delivery layers change.
+All three profiles share the exact same `L0`–`L5` crate rules and `xtask verify` harness; only the outer persistence, UI delivery, and OS adapter layers change.
 
-| Concern | [Backend Service Profile](../skills/rust-architecture-baseline/references/backend-service-profile.md) | [Desktop & CLI Profile](../skills/rust-architecture-baseline/references/desktop-cli-profile.md) | Why they differ |
+| Concern | [Profile A: Backend Service](../skills/rust-architecture-baseline/references/backend-service-profile.md) | [Profile B: Desktop & CLI (Tauri v2)](../skills/rust-architecture-baseline/references/desktop-cli-profile.md) | [Profile C: Native GPUI Desktop & CLI](../skills/rust-architecture-baseline/references/gpui-desktop-profile.md) |
 | :--- | :--- | :--- | :--- |
-| **Delivery shell** | Axum HTTP, MCP server, workers | Tauri v2 window, tray, Clap CLI | Network services serve concurrent clients; local tools run single-user on the OS |
-| **`L3 store`** | Postgres + forced RLS (or SQLite WAL) | Atomic JSON / SQLite in app-data | Multi-tenant services need DB-enforced tenant isolation; desktop tools need crash-safe local files |
-| **External I/O (`L5`)** | Outbound webhooks, APIs, queues | OS probes, subprocesses, local tools | Windows GUI apps must set `CREATE_NO_WINDOW` (`0x0800_0000`) to prevent console flashes |
-| **Frontend bridge** | REST / SSE / JSON-RPC + `ts-rs` | Thin `mod ipc` (`#[tauri::command]`) + `ts-rs` | Both share `createPreviewBridge` so UI states can be inspected in a plain browser |
-| **Extra `xtask` gate** | `rls` tenant-isolation test gate | Cross-platform path & bundle check | Catches cross-tenant leaks on servers and backslash/toolchain regressions on Windows |
+| **Delivery shell** | Axum HTTP, MCP server, workers | Tauri v2 WebView, tray, Clap CLI | Native GPUI window, macOS Menu Bar / Windows Tray, Clap CLI |
+| **`L3 store`** | Postgres + forced RLS (or SQLite WAL) | Atomic JSON / SQLite in app-data | Atomic JSON / SQLite in app-data |
+| **External I/O (`L5`)** | Outbound webhooks, APIs, queues | OS probes, subprocesses, local tools | Pure-Rust `sysinfo`, POSIX symlinks / NTFS junctions, local files |
+| **UI contract** | REST / SSE / JSON-RPC + `ts-rs` | Thin `mod ipc` (`#[tauri::command]`) + `ts-rs` | Direct compile-time `L0`/`L1` Rust types (no `ts-rs` step) |
+| **Extra `xtask` / CI check** | `rls` tenant-isolation test gate | Cross-platform path & WebView bundle check | `macos-latest` (`runtime_shaders`) + `windows-latest` CI matrix |
 
 ## 6. Baseline Invariants & Rust 2024 Gotchas
 
@@ -148,11 +148,13 @@ Cross-platform and Edition 2024 traps already guarded inside [`planning-rust-bui
 | Failure mode / trap | Why it bites | Mechanical fix baked into the skills |
 | :--- | :--- | :--- |
 | `.unwrap()` / `.expect()` / `as` casts | Silent production panics or integer truncation | Workspace lints deny them under `clippy -D warnings`; `unsafe_code = "forbid"` |
-| `L0`–`L2` importing `tokio` / `std::fs` | Pure domain logic becomes slow and flaky to test | `xtask purity` scans source + `cargo metadata` DAG on every verify |
+| `L0`–`L2` importing `tokio` / `std::fs` / `gpui` | Pure domain logic becomes slow and flaky to test | `xtask purity` scans source + `cargo metadata` DAG on every verify |
 | Edition 2024 `gen` & `collapsible-if` | `gen` is a reserved keyword; `let`-chains trigger `-D warnings` | Use `epoch` / `rev` and collapsed `if let` chains upfront |
 | `#[tauri::command]` + `unreachable` lint | Macro expansion emits `unreachable!()`, tripping workspace deny | Isolate thin wrappers in `mod ipc { #![allow(clippy::unreachable)] }` |
+| `gpui` macOS missing Metal Toolchain | Newer Xcode separates offline `metal` into an optional component | Enable `gpui` `features = ["runtime_shaders"]` so shaders compile via Metal at runtime |
+| `tray-icon` macOS thread & `sysinfo 0.40+` | Off-main-thread Cocoa crash; `System::new()` returns `Result` | Initialize `TrayIcon` inside `Application::new().run(...)`; propagate `System::new()?` |
 | `ts-rs` exporting `u64`/`i64` as `bigint` | Breaks JSON number interop in React/TypeScript | Annotate numeric fields with `#[ts(type = "number")]` and `#[ts(optional)]` |
-| Windows subprocess window flash & paths | Console window pops up in Tauri GUI; `\` breaks `xtask` checks | Set `CREATE_NO_WINDOW` under `#[cfg(windows)]` and normalize `/` in `xtask` |
+| Windows subprocess window flash & paths | Console window pops up in desktop GUIs; `\` breaks `xtask` checks | Set `windows_subsystem = "windows"`, `CREATE_NO_WINDOW`, and normalize `/` in `xtask` |
 
 ---
 
