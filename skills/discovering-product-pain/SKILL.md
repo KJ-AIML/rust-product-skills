@@ -30,9 +30,10 @@ Cover these checkpoints naturally (not as a rigid questionnaire):
 5. **Mine existing context (if any).** If replacing or extending an older repo/script, inspect it and list: `concept | what it does | keep / adapt / drop`.
 6. **Propose a lean v1 core.** Present 4–8 numbered capabilities (`F1`–`F8`), each with **Covers** and **Does not cover (v1)**, plus explicit **Non-goals**.
 7. **Choose the runtime profile.** Confirm whether the product fits:
-   - **Backend Service** (HTTP/MCP API + Postgres/SQLite)
-   - **Desktop / Local CLI** (Tauri v2 + local atomic store / SQLite)
-   - **Hybrid** (shared Rust core powering both)
+   - **Profile A — Backend Service** (HTTP/MCP API + Postgres/SQLite)
+   - **Profile B — Desktop & CLI (Tauri v2)** (Tauri v2 + React + local atomic store / SQLite)
+   - **Profile C — Native GPUI Desktop & CLI** (Pure Rust GPUI + Menu Bar / Tray + local atomic store / SQLite)
+   - **Hybrid** (shared Rust core powering multiple shells)
 
 ## Done When
 

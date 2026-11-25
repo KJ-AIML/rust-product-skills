@@ -1,9 +1,9 @@
 ---
 name: starting-a-rust-product
 description: >-
-  Use when a user proposes a new Rust product, backend service, CLI tool, or Tauri v2 desktop
-  application ("new product", "new service", "build a Rust version", "let's start") and needs a
-  structured path from problem discovery to a verified, layered implementation.
+  Use when a user proposes a new Rust product, backend service, CLI tool, Tauri v2, or native GPUI
+  desktop application ("new product", "new service", "build a Rust version", "let's start") and
+  needs a structured path from problem discovery to a verified, layered implementation.
 ---
 
 # Starting a Rust Product
@@ -20,7 +20,7 @@ Products share a proven Rust architectural baseline and quality gates, not a fea
 | 2 | Write the design doc | `writing-rust-design-docs` | `docs/decisions/ADR-001-<product>-design.md` | User approves design & rules `R1..Rn` |
 | 3 | Plan the first build slice | `planning-rust-builds` | `docs/plans/YYYY-MM-DD-<product>-p1-plan.md` | User approves plan & execution mode |
 | 4 | Scaffold & build core | `rust-architecture-baseline` | Layered Cargo workspace (`L0`–`L5`), `xtask verify`, first vertical slice | `cargo run -p xtask -- verify` passes |
-| 5 | Craft the UI (if applicable) | `modern-ui-design` | React + Vite + Tailwind v4 UI consuming `ts-rs` types + browser preview | Visual check & typecheck pass |
+| 5 | Craft the UI (if applicable) | `modern-ui-design` | React + Vite + Tailwind v4 UI (`ts-rs`) **or** Native GPUI desktop view (`gpui-tokens.md`) | Visual check & build/typecheck pass |
 
 ## Gate Rules
 

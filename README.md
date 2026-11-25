@@ -12,13 +12,13 @@ scaffold a strict <code>L0</code>–<code>L5</code> Rust Edition 2024 workspace,
   <img src="https://img.shields.io/badge/Rust-Edition%202024-CE422B?logo=rust&logoColor=white" alt="Rust Edition 2024">
   <a href="https://skills.sh/"><img src="https://img.shields.io/badge/npx%20skills-compatible-2563EB" alt="Compatible with npx skills add"></a>
   <img src="https://img.shields.io/badge/skills-6%20modular-0D9488" alt="6 modular skills">
-  <img src="https://img.shields.io/badge/profiles-Service%20%C2%B7%20Tauri%20v2%20%C2%B7%20CLI-E2862A" alt="Backend Service, Tauri v2 Desktop, and CLI profiles">
+  <img src="https://img.shields.io/badge/profiles-Service%20%C2%B7%20Tauri%20v2%20%C2%B7%20GPUI%20%C2%B7%20CLI-E2862A" alt="Backend Service, Tauri v2 Desktop, Native GPUI Desktop, and CLI profiles">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-555" alt="MIT license"></a>
   <a href="https://github.com/KJ-AIML/rust-product-skills"><img src="https://img.shields.io/github/stars/KJ-AIML/rust-product-skills?style=social" alt="GitHub stars"></a>
 </p>
 
 <p align="center">
-  <b><a href="#quick-start">Quick start</a></b> · <a href="#the-6-skills">Skills</a> · <a href="#layered-architecture">Architecture</a> · <a href="#two-app-profiles">App profiles</a> · <a href="#modern-ui-system">Modern UI</a> · <a href="docs/architecture-tour.md">Tour</a> · <a href="#license">MIT</a><br>
+  <b><a href="#quick-start">Quick start</a></b> · <a href="#the-6-skills">Skills</a> · <a href="#layered-architecture">Architecture</a> · <a href="#three-app-profiles">App profiles</a> · <a href="#modern-ui-system">Modern UI</a> · <a href="docs/architecture-tour.md">Tour</a> · <a href="#license">MIT</a><br>
   <sub>Works with Antigravity · Claude Code · Codex · Cursor · Gemini CLI · Copilot CLI</sub>
 </p>
 
@@ -38,7 +38,7 @@ scaffold a strict <code>L0</code>–<code>L5</code> Rust Edition 2024 workspace,
     </td>
     <td width="25%" valign="top">
       <b>Craft UI</b><br>
-      Pair the Rust core with a brand-neutral dark-first &amp; light-mode React + Tailwind v4 UI backed by generated TypeScript types.
+      Pair the Rust core with a brand-neutral dark-first &amp; light-mode React + Tailwind v4 UI (<code>ts-rs</code>) or a native GPUI desktop view.
     </td>
   </tr>
 </table>
@@ -134,7 +134,7 @@ Each skill follows the open [agentskills.io](https://agentskills.io) specificati
 | 2 | [`writing-rust-design-docs`](skills/writing-rust-design-docs/SKILL.md) | Decision-labeled specs (`[user]` vs `[call]`), engine-enforced rules `R1..Rn`, cold-reader check · [`design-doc-template.md`](skills/writing-rust-design-docs/references/design-doc-template.md) |
 | 3 | [`rust-architecture-baseline`](skills/rust-architecture-baseline/SKILL.md) | `L0`–`L5` layered Rust Edition 2024 workspace, strict deny lints, `Engine::execute`, `xtask verify` · [`workspace-scaffold.md`](skills/rust-architecture-baseline/references/workspace-scaffold.md) |
 | 4 | [`planning-rust-builds`](skills/planning-rust-builds/SKILL.md) | Phase 1–2 bottom-up DAG plans, top 5 failure modes, cross-platform & Windows gotchas · [`plan-template.md`](skills/planning-rust-builds/references/plan-template.md) |
-| 5 | [`modern-ui-design`](skills/modern-ui-design/SKILL.md) | Brand-neutral dark-first + light-mode token system, hairline surfaces, React + Vite + Tailwind v4 + `ts-rs` · [`design-tokens.md`](skills/modern-ui-design/references/design-tokens.md) · [`component-patterns.md`](skills/modern-ui-design/references/component-patterns.md) |
+| 5 | [`modern-ui-design`](skills/modern-ui-design/SKILL.md) | Brand-neutral dark-first + light-mode token system, hairline surfaces, React + Vite + Tailwind v4 (`ts-rs`) &amp; Native GPUI · [`design-tokens.md`](skills/modern-ui-design/references/design-tokens.md) · [`gpui-tokens.md`](skills/modern-ui-design/references/gpui-tokens.md) · [`component-patterns.md`](skills/modern-ui-design/references/component-patterns.md) |
 
 ## Layered architecture
 
@@ -157,7 +157,7 @@ Each skill follows the open [agentskills.io](https://agentskills.io) specificati
 | `L3` | `store` | `L0`–`L2` | Only crate allowed to touch persistence (Postgres RLS, SQLite, or atomic JSON) |
 | `L4` | `engine` | `L0`–`L3` | `CommandRegistry`, `Engine::execute`, `CatchUnwind` panic boundary, audit log, and **inverted `L5` port traits** |
 | `L5` | `integrations` | `L0`, `L4` (ports) | External HTTP (`reqwest`), subprocesses, OS/system calls with explicit timeouts and byte caps |
-| `App` | `apps/*` | `L0`–`L5` | Thin delivery shells: Axum / MCP server, background worker, Tauri v2 desktop, or Clap CLI |
+| `App` | `apps/*` | `L0`–`L5` | Thin delivery shells: Axum / MCP server, background worker, Tauri v2 desktop, Native GPUI desktop, or Clap CLI |
 
 ### Workspace layout
 
@@ -215,41 +215,44 @@ Conventions drift when agents iterate quickly. Every workspace generated with th
 | :--- | :--- | :--- |
 | Edition 2024 `gen` &amp; `collapsible-if` | `gen` is a reserved keyword; `let`-chains fail under `-D warnings` | Use `epoch` / `rev` and collapsed `if let` chains from Task 1 |
 | `#[tauri::command]` + `unreachable` lint | Macro expansion emits `unreachable!()`, tripping workspace deny | Isolate thin IPC wrappers in `mod ipc { #![allow(clippy::unreachable)] }` |
+| `gpui` macOS missing Metal Toolchain | Newer Xcode separates offline `metal` tool into an optional download | Enable `gpui` `features = ["runtime_shaders"]` so Metal compiles shaders at runtime |
+| `tray-icon` macOS thread & template API | Creating `TrayIcon` off main thread crashes Cocoa; old flag trips `-D warnings` | Initialize inside `Application::new().run(...)` and use `.with_icon_templated(icon)` under `#[cfg(target_os = "macos")]` |
+| `sysinfo` 0.40+ `System::new()` return type | Returns `Result<System, Error>` instead of infallible `System` | Propagate with `?` / `map_err` inside `L5 integrations` |
 | `ts-rs` exporting `u64`/`i64` as `bigint` | Breaks JSON number interop in React/TypeScript | Annotate numeric fields with `#[ts(type = "number")]` and `#[ts(optional)]` |
-| Windows subprocess window flash | Console window flashes when a Tauri GUI spawns a CLI | Set `.creation_flags(0x0800_0000)` (`CREATE_NO_WINDOW`) under `#[cfg(windows)]` |
-| `xtask` passes on Linux, fails on Windows | Backslash paths break string checks | Normalize all paths with `.replace('\\', "/")` inside `xtask` |
+| Windows subprocess window flash | Console window flashes when a desktop GUI spawns a CLI | Set `windows_subsystem = "windows"` and `.creation_flags(0x0800_0000)` (`CREATE_NO_WINDOW`) under `#[cfg(windows)]` |
+| `xtask` passes on Linux/macOS, fails on Windows | Backslash paths break string checks | Normalize all paths with `.replace('\\', "/")` inside `xtask` |
 | Shell / SQL scripts break on checkout | CRLF line endings break bash/migrations | Enforce `*.sh`, `*.sql`, `*.rs`, `*.toml` as `text eol=lf` in `.gitattributes` |
 
 </details>
 
-## Two app profiles
+## Three app profiles
 
-The same `L0`–`L5` core adapts to two production deployment shapes documented directly in `rust-architecture-baseline`:
+The same `L0`–`L5` core adapts to three production deployment shapes documented directly in `rust-architecture-baseline`:
 
-| Concern | [Backend Service Profile](skills/rust-architecture-baseline/references/backend-service-profile.md) | [Desktop & CLI Profile](skills/rust-architecture-baseline/references/desktop-cli-profile.md) |
-| :--- | :--- | :--- |
-| **Delivery surfaces** | Axum HTTP API, MCP server, background workers | Tauri v2 desktop app, system tray, Clap CLI |
-| **Persistence (`L3`)** | Postgres (`sqlx` + forced RLS) or SQLite (WAL) | Atomic JSON / SQLite in OS app-data directory |
-| **Isolation & auth** | Per-tenant auth context & automated RLS verification | Local config boundaries, `CREATE_NO_WINDOW` subprocess safety on Windows |
-| **Frontend contract** | REST / SSE / JSON-RPC + `ts-rs` bindings | Thin `#[tauri::command]` IPC delegating to `Engine::execute` + `ts-rs` |
-| **External I/O (`L5`)** | Outbound webhooks, LLM/API clients, queues | Local CLI probes, OS networking, native integrations |
+| Concern | [Profile A: Backend Service](skills/rust-architecture-baseline/references/backend-service-profile.md) | [Profile B: Desktop & CLI (Tauri v2)](skills/rust-architecture-baseline/references/desktop-cli-profile.md) | [Profile C: Native GPUI Desktop & CLI](skills/rust-architecture-baseline/references/gpui-desktop-profile.md) |
+| :--- | :--- | :--- | :--- |
+| **Delivery surfaces** | Axum HTTP API, MCP server, background workers | Tauri v2 WebView app, system tray, Clap CLI | Pure-Rust GPUI window, macOS Menu Bar / Windows Tray, Clap CLI |
+| **Persistence (`L3`)** | Postgres (`sqlx` + forced RLS) or SQLite (WAL) | Atomic JSON / SQLite in OS app-data directory | Atomic JSON / SQLite in OS app-data directory |
+| **Isolation & auth** | Per-tenant auth context & automated RLS verification | Local config boundaries, `CREATE_NO_WINDOW` subprocess safety | Zero-`unsafe` OS adapters, `CREATE_NO_WINDOW` + `windows_subsystem` |
+| **UI contract** | REST / SSE / JSON-RPC + `ts-rs` bindings | Thin `#[tauri::command]` IPC delegating to `Engine::execute` + `ts-rs` | Direct compile-time `L0`/`L1` Rust types (no `ts-rs` step needed) |
+| **External I/O (`L5`)** | Outbound webhooks, LLM/API clients, queues | Local CLI probes, OS networking, native integrations | `sysinfo` process control, POSIX symlinks / NTFS junctions, local files |
 
 ## Modern UI system
 
-[`modern-ui-design`](skills/modern-ui-design/SKILL.md) provides a clean, **completely brand-neutral** UI foundation for React 19 + Vite + Tailwind CSS v4 so your Rust product looks crisp on day one without inheriting someone else's brand identity:
+[`modern-ui-design`](skills/modern-ui-design/SKILL.md) provides a clean, **completely brand-neutral** UI foundation for both **React 19 + Vite + Tailwind CSS v4** (Profiles A & B) and **Native GPUI** (Profile C) so your Rust product looks crisp on day one without inheriting someone else's brand identity:
 
-- **Dark-first with true light-mode parity** via semantic CSS custom properties ([`design-tokens.md`](skills/modern-ui-design/references/design-tokens.md)).
+- **Dark-first with true light-mode parity** via semantic CSS custom properties ([`design-tokens.md`](skills/modern-ui-design/references/design-tokens.md)) and matching pure-Rust `gpui::Hsla` palettes ([`gpui-tokens.md`](skills/modern-ui-design/references/gpui-tokens.md)).
 - **Hairline surfaces & high contrast** with restrained accents, `tabular-nums` alignment for telemetry/metrics, and accessible focus states.
-- **Practical component patterns** for app shells, dense data tables, command dialogs, empty/error states, browser Preview Mode, and reduced-motion discipline ([`component-patterns.md`](skills/modern-ui-design/references/component-patterns.md)).
-- **Zero duplicated schemas** — Rust `L1 spec` types generate TypeScript definitions via `ts-rs` and are checked in `xtask verify`.
+- **Practical component patterns** for app shells, compact menu-bar popovers, dense data tables, command dialogs, empty/error states, browser Preview Mode, and reduced-motion discipline ([`component-patterns.md`](skills/modern-ui-design/references/component-patterns.md)).
+- **Zero duplicated schemas** — Rust `L1 spec` types either generate TypeScript definitions via `ts-rs` (checked in `xtask verify`) or bind directly into GPUI at compile time.
 
 ## Learn more
 
 - [Architecture & Lifecycle Tour](docs/architecture-tour.md): full walkthrough of all 5 stages, `L0`–`L5` Mermaid DAG, `Engine::execute` sequence, profile comparison, and Rust 2024 gotchas
 - [Workspace & `xtask verify` scaffold](skills/rust-architecture-baseline/references/workspace-scaffold.md): root `Cargo.toml` lints, `rust-toolchain.toml`, and `xtask` gate implementation
-- [Backend Service profile](skills/rust-architecture-baseline/references/backend-service-profile.md) · [Desktop & CLI profile](skills/rust-architecture-baseline/references/desktop-cli-profile.md)
+- [Profile A: Backend Service](skills/rust-architecture-baseline/references/backend-service-profile.md) · [Profile B: Desktop & CLI (Tauri v2)](skills/rust-architecture-baseline/references/desktop-cli-profile.md) · [Profile C: Native GPUI Desktop & CLI](skills/rust-architecture-baseline/references/gpui-desktop-profile.md)
 - [ADR design doc template](skills/writing-rust-design-docs/references/design-doc-template.md) · [Phase 1–2 build plan template](skills/planning-rust-builds/references/plan-template.md)
-- [Design tokens (Dark + Light)](skills/modern-ui-design/references/design-tokens.md) · [Component patterns & UI verification](skills/modern-ui-design/references/component-patterns.md)
+- [Design tokens (Web / Tauri)](skills/modern-ui-design/references/design-tokens.md) · [Design tokens (Native GPUI)](skills/modern-ui-design/references/gpui-tokens.md) · [Component patterns & UI verification](skills/modern-ui-design/references/component-patterns.md)
 
 ## Contributing
 
