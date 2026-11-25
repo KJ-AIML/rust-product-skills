@@ -216,7 +216,7 @@ Conventions drift when agents iterate quickly. Every workspace generated with th
 | Edition 2024 `gen` &amp; `collapsible-if` | `gen` is a reserved keyword; `let`-chains fail under `-D warnings` | Use `epoch` / `rev` and collapsed `if let` chains from Task 1 |
 | `#[tauri::command]` + `unreachable` lint | Macro expansion emits `unreachable!()`, tripping workspace deny | Isolate thin IPC wrappers in `mod ipc { #![allow(clippy::unreachable)] }` |
 | `gpui` macOS missing Metal Toolchain | Newer Xcode separates offline `metal` tool into an optional download | Enable `gpui` `features = ["runtime_shaders"]` so Metal compiles shaders at runtime |
-| `tray-icon` macOS thread & template API | Creating `TrayIcon` off main thread crashes Cocoa; old flag trips `-D warnings` | Initialize inside `Application::new().run(...)` and use `.with_icon_templated(icon)` |
+| `tray-icon` macOS thread & template API | Creating `TrayIcon` off main thread crashes Cocoa; old flag trips `-D warnings` | Initialize inside `Application::new().run(...)` and use `.with_icon_templated(icon)` under `#[cfg(target_os = "macos")]` |
 | `sysinfo` 0.40+ `System::new()` return type | Returns `Result<System, Error>` instead of infallible `System` | Propagate with `?` / `map_err` inside `L5 integrations` |
 | `ts-rs` exporting `u64`/`i64` as `bigint` | Breaks JSON number interop in React/TypeScript | Annotate numeric fields with `#[ts(type = "number")]` and `#[ts(optional)]` |
 | Windows subprocess window flash | Console window flashes when a desktop GUI spawns a CLI | Set `windows_subsystem = "windows"` and `.creation_flags(0x0800_0000)` (`CREATE_NO_WINDOW`) under `#[cfg(windows)]` |

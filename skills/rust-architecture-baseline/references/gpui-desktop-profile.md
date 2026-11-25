@@ -35,11 +35,22 @@ Unlike Profiles A and B (which cross a Rust ↔ TypeScript boundary via `ts-rs`)
 2. **Initialize `TrayIcon` strictly on the main UI thread inside `Application::new().run`:**
    On macOS, Cocoa requires `NSStatusItem` creation *after* `NSApplication` is initialized on the main thread. Create `TrayController` inside `Application::new().run(|cx| { ... })` before opening the root window, and keep ownership inside the root view entity so the icon stays alive for the app lifetime.
 3. **Embed or procedurally generate tray icons in memory:**
-   Generate crisp RGBA bytes in memory (or `include_bytes!`) so portable binaries never break from missing relative asset paths. On macOS, use `.with_icon_templated(icon)` (avoiding deprecated `.with_icon_as_template(true)`) so the icon adapts automatically to light/dark menu bars.
+   Generate crisp RGBA bytes in memory (or `include_bytes!`) so portable binaries never break from missing relative asset paths. On macOS, use `.with_icon_templated(icon)` (avoiding deprecated `.with_icon_as_template(true)`) so the icon adapts automatically to light/dark menu bars. `with_icon_templated` only exists under `#[cfg(target_os = "macos")]`, so gate that call and use `.with_icon(icon)` on Windows, or the Windows build fails.
 4. **Poll tray events asynchronously without blocking the render loop:**
    Use `cx.spawn_in(window, async move |this, cx| ...)` with a lightweight timer (`~80–100ms`) draining `TrayIconEvent::receiver().try_recv()` and `MenuEvent::receiver().try_recv()`. Only rebuild the native tray menu when the state signature actually changes.
 5. **Bridge `tokio` work off the GPUI UI thread:**
-   Never call blocking I/O or `rt.block_on(...)` directly inside `Render::render` or click listeners. Dispatch commands through `cx.background_executor().spawn(async move { rt.block_on(engine.execute(...)) })`, then update view state and call `cx.notify()` back on the UI actor.
+   Never call blocking I/O or `rt.block_on(...)` inside `Render::render`, click listeners, or GPUI executor tasks (a `block_on` in `cx.background_executor().spawn(...)` holds a GPUI worker thread for the whole command). Spawn the command on the `tokio` runtime and await its `JoinHandle` from a GPUI task, then update view state and call `cx.notify()`:
+   ```rust
+   let job = rt.spawn(async move { engine.execute(request, caller).await });
+   cx.spawn(async move |this, cx| {
+       let outcome = job.await; // Result<_, tokio::task::JoinError>
+       this.update(cx, |view, cx| {
+           view.apply(outcome);
+           cx.notify();
+       })
+   })
+   .detach();
+   ```
 6. **Top Menu Bar Popover & Keyboard Input Reliability:**
    For interactive panels with text inputs (Add/Edit sheets, search bars) across both macOS and Windows, prefer `WindowKind::Normal` with `TitlebarOptions { appears_transparent: true, .. }` and compact popover bounds (e.g., `480 × 640`), reserving left padding (`~58px`) on macOS for traffic lights. This avoids `WindowKind::PopUp` focus quirks on macOS while keeping a sleek floating top-navbar feel.
 7. **Respect `clippy::as_conversions = "deny"` in GPUI layouts:**
